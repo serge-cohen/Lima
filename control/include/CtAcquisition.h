@@ -68,56 +68,56 @@ namespace lima
     };
 
     CtAcquisition(HwInterface *hw);
-    ~CtAcquisition();
+    virtual ~CtAcquisition();
 
     // --- global
 
-    void setPars(const Parameters &pars);
-    void getPars(Parameters& pars) const;
+    virtual void setPars(const Parameters &pars);
+    virtual void getPars(Parameters& pars) const;
 
-    void reset();
-    void apply(CtControl::ApplyPolicy policy);
-    void sync();
+    virtual void reset();
+    virtual void apply(CtControl::ApplyPolicy policy);
+    virtual void sync();
 
     // --- acq modes
 
-    void setAcqMode(AcqMode mode);
-    void getAcqMode(AcqMode& mode) const;
+    virtual void setAcqMode(AcqMode mode);
+    virtual void getAcqMode(AcqMode& mode) const;
 
-    void setAccTimeMode(AccTimeMode mode);
-    void getAccTimeMode(AccTimeMode &mode) const;
+    virtual void setAccTimeMode(AccTimeMode mode);
+    virtual void getAccTimeMode(AccTimeMode &mode) const;
 
-    void setAcqNbFrames(int nframes);
-    void getAcqNbFrames(int& nframes) const;
+    virtual void setAcqNbFrames(int nframes);
+    virtual void getAcqNbFrames(int& nframes) const;
 
-    void setAcqExpoTime(double acq_time);
-    void getAcqExpoTime(double& acq_time) const;
+    virtual void setAcqExpoTime(double acq_time);
+    virtual void getAcqExpoTime(double& acq_time) const;
     bool checkAutoExposureMode(AutoExposureMode mode) const;
-    void getAutoExposureModeList(AutoExposureModeList& modes) const;
-    void setAutoExposureMode(AutoExposureMode mode);
-    void getAutoExposureMode(AutoExposureMode& mode) const;
+    virtual void getAutoExposureModeList(AutoExposureModeList& modes) const;
+    virtual void setAutoExposureMode(AutoExposureMode mode);
+    virtual void getAutoExposureMode(AutoExposureMode& mode) const;
 
 
-    void setAccMaxExpoTime(double max_time);
-    void getAccMaxExpoTime(double& max_time) const;
+    virtual void setAccMaxExpoTime(double max_time);
+    virtual void getAccMaxExpoTime(double& max_time) const;
 
-    void getAccNbFrames(int& nframes) const;
-    void getAccExpoTime(double& acc_time) const;
-    void getAccLiveTime(double& acc_live_time) const;
-    void getAccDeadTime(double& acc_dead_time) const;
+    virtual void getAccNbFrames(int& nframes) const;
+    virtual void getAccExpoTime(double& acc_time) const;
+    virtual void getAccLiveTime(double& acc_live_time) const;
+    virtual void getAccDeadTime(double& acc_dead_time) const;
 
-    void setConcatNbFrames(int nframes);
-    void getConcatNbFrames(int& nframes) const; 
+    virtual void setConcatNbFrames(int nframes);
+    virtual void getConcatNbFrames(int& nframes) const; 
 
     // --- common
 
-    void setLatencyTime(double latency_time);
-    void getLatencyTime(double& latency_time) const;
+    virtual void setLatencyTime(double latency_time);
+    virtual void getLatencyTime(double& latency_time) const;
 
-    void setTriggerMode(TrigMode mode);
-    void getTriggerMode(TrigMode& mode) const;
+    virtual void setTriggerMode(TrigMode mode);
+    virtual void getTriggerMode(TrigMode& mode) const;
 
-    void getTriggerModeList(TrigModeList& modes) const;
+    virtual void getTriggerModeList(TrigModeList& modes) const;
   private:
     class _ValidRangesCallback;
     friend class _ValidRangesCallback;
@@ -141,7 +141,7 @@ namespace lima
     void _updateAccPars() const;
     void _setDefaultPars(Parameters* pars);
     void _apply();
-    void _hwRead();
+    virtual void _hwRead();
 
 #ifdef WITH_CONFIG
     class _ConfigHandler;

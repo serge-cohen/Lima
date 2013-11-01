@@ -39,6 +39,7 @@ class HwEventCtrlObj;
 class HwSavingCtrlObj;
 class HwConfigCtrlObj;
 class HwReconstructionCtrlObj;
+class CtAcquistion;
 
 class LIMACORE_API HwCap
 {
@@ -56,6 +57,7 @@ public:
 		Saving,			// Saving capable
 		Config,			// Config management capable
 		Reconstruction,		// Image reconstruction capable
+    Acquisition,      // The CtAcquisition or its subclass handling the camera
 	};
 	HwCap() : m_type(Undef),m_ctrl_obj(NULL) {}
 	
@@ -80,6 +82,7 @@ public:
 	static Type getTypeFromCtrlObj(HwSavingCtrlObj*);
 	static Type getTypeFromCtrlObj(HwConfigCtrlObj*);
 	static Type getTypeFromCtrlObj(HwReconstructionCtrlObj*);
+	static Type getTypeFromCtrlObj(CtAcquistion*);
 
 	template <class CtrlObj>
 	bool getCtrlObj(CtrlObj *& ctrl_obj) const

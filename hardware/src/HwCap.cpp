@@ -92,4 +92,10 @@ HwCap::Type HwCap::getTypeFromCtrlObj(HwReconstructionCtrlObj*)
 {
 	return Reconstruction;
 }
+  
+HwCap::Type HwCap::getTypeFromCtrlObj(CtAcquistion*)
+{
+  return Acquisition;
+}
+
 } // namespace lima
