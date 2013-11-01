@@ -162,7 +162,13 @@ CtControl::CtControl(HwInterface *hw) :
 {
   DEB_CONSTRUCTOR();
 
-  m_ct_acq= new CtAcquisition(hw);
+  if ( m_hw->getHwCtrlObj(m_ct_acq) ) {
+    DEB_TRACE() << "The CtAcquisition object was provided by the camera interface, we should make sure we do not delete it";
+  }
+  else {
+    DEB_TRACE() << "The camera interface does not provide a CtAcquisition object, we are constructing one here";
+    m_ct_acq= new CtAcquisition(hw);
+  }
   m_ct_image= new CtImage(hw,*this);
   m_ct_buffer= new CtBuffer(hw);
   m_ct_shutter = new CtShutter(hw);
@@ -244,7 +250,14 @@ CtControl::~CtControl()
 #ifdef WITH_CONFIG
   delete m_ct_config;
 #endif
-  delete m_ct_acq;
+  CtAcquisition		*the_acq;
+  if ( ! m_hw->getHwCtrlObj(the_acq) ) {
+    DEB_TRACE() << "The CtControl had the responsibility to instanciate the CtAcquisition : deleting it upon destruction.";
+    delete m_ct_acq;
+  }
+  else {
+    DEB_TRACE() << "The CtAcquisition was provided by camera interface, leave it alone even through the destrcution of the CtControl object.";
+  }
   delete m_ct_image;
   delete m_ct_buffer;
   delete m_ct_shutter;
