@@ -21,6 +21,8 @@
 //###########################################################################
 #include "HwCap.h"
 
+#include "../../control/include/CtAcquisition.h"
+
 namespace lima
 {
 
@@ -93,7 +95,7 @@ HwCap::Type HwCap::getTypeFromCtrlObj(HwReconstructionCtrlObj*)
 	return Reconstruction;
 }
   
-HwCap::Type HwCap::getTypeFromCtrlObj(CtAcquistion*)
+HwCap::Type HwCap::getTypeFromCtrlObj(CtAcquisition*)
 {
   return Acquisition;
 }
