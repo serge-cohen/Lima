@@ -29,6 +29,7 @@ const char* HwSavingCtrlObj::RAW_FORMAT_STR = "RAW"; ///< Raw format (no header)
 const char* HwSavingCtrlObj::EDF_FORMAT_STR = "EDF"; ///< EDF format (Esrf Data Format)
 const char* HwSavingCtrlObj::CBF_FORMAT_STR = "CBF"; ///< CBF format
 const char* HwSavingCtrlObj::TIFF_FORMAT_STR = "TIFF"; ///< TIFF format
+const char* HwSavingCtrlObj::HDF5_FORMAT_STR = "HDF5"; ///< HDF5 format
 #ifdef __linux__
 class HwSavingCtrlObj::DirectoryCallback : public DirectoryEvent::Callback
 {
@@ -98,7 +99,7 @@ HwSavingCtrlObj::~HwSavingCtrlObj()
 {
 #ifdef __linux__
   delete m_dir_cbk;
-#endif
+#endif  
 }
 
 void HwSavingCtrlObj::setActive(bool flag)
@@ -176,7 +177,7 @@ void HwSavingCtrlObj::prepare()
   if(m_active)
     {
       _prepare();
-#ifdef __linux__
+#ifdef __linux__ 
       DirectoryEvent::Parameters params;
       params.watch_path = m_directory;
       params.file_pattern = m_prefix;
@@ -186,7 +187,7 @@ void HwSavingCtrlObj::prepare()
       m_dir_event.prepare(params);
 
       if(m_callback)
-	m_callback->prepare(params);
+	m_callback->prepare(params);  
 #endif
     }
 }
@@ -199,7 +200,7 @@ void HwSavingCtrlObj::start()
     {
       _start();
 #ifdef __linux__
-      m_dir_event.start();
+      m_dir_event.start();   
 #endif
     }
 }
@@ -207,7 +208,7 @@ void HwSavingCtrlObj::stop()
 {
 #ifdef __linux__
   m_dir_event.stop();
-#endif
+#endif  
 }
 
 int HwSavingCtrlObj::getCapabilities() const

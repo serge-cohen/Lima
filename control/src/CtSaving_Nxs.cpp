@@ -70,7 +70,6 @@ void SaveContainerNxs::_close()
   DEB_MEMBER_FUNCT();
 }
 
-
 //--------------------------------------------------------------------------------------------------------------------
 //- Event rising by CtSaving when ???
 //--------------------------------------------------------------------------------------------------------------------
@@ -94,114 +93,138 @@ void SaveContainerNxs::_clear()
 //- 	.Finalize
 //--------------------------------------------------------------------------------------------------------------------
 void SaveContainerNxs::_writeFile(Data &aData,
-								  CtSaving::HeaderMap &aHeader,
-								  CtSaving::FileFormat aFormat)
+                                  CtSaving::HeaderMap &aHeader,
+                                  CtSaving::FileFormat aFormat)
 {
-	DEB_MEMBER_FUNCT();
-
-	  try
-	  {
-		  DEB_TRACE()<<"SaveContainerNxs::_writeFile() aData.frameNumber = "<<aData.frameNumber;
-		  //that's mean that snap was stopped previous by user command or device was hang
-		  //so me must clean the NXS object
-		  if(m_writer && aData.frameNumber==0)
-		  {
-			DEB_TRACE()<<"SaveContainerNxs::_writeFile() - Abort() current Nexus writer";
-			//Abort every current task && go away
-			m_writer->Abort();
-			
-			//destroy object
-			DEB_TRACE()<<"SaveContainerNxs::_writeFile() - delete the writer()";
-			delete m_writer;
-			m_writer = 0;			
-		  }
-		  
-		  //prepare nexus object : to do once for each new sequence
-		  if(!m_writer)
-		  {
-			//get acquisition parameters
-			getParameters(m_pars);
-			
-			//create N4T main object needed to generate Nexus file
-			DEB_TRACE()<<"SaveContainerNxs::_writeFile() - create the writer";
+    DEB_MEMBER_FUNCT();
+ 
+      try
+      {
+          DEB_TRACE()<<"SaveContainerNxs::_writeFile() aData.frameNumber = "<<aData.frameNumber;
+          //that's mean that snap was stopped previous by user command or device was hang
+          //so me must clean the NXS object
+          if(m_writer && aData.frameNumber==0)
+          {
+            DEB_TRACE()<<"SaveContainerNxs::_writeFile() - Abort() current Nexus writer";
+            //Abort every current task && go away
+            m_writer->Abort();
+             
+            //destroy object
+            DEB_TRACE()<<"SaveContainerNxs::_writeFile() - delete the writer()";
+            delete m_writer;
+            m_writer = 0;           
+          }
+           
+          //prepare nexus object : to do once for each new sequence
+          if(!m_writer)
+          {
+            //get acquisition parameters
+            getParameters(m_pars);
+             
+            //create N4T main object needed to generate Nexus file
+            DEB_TRACE()<<"SaveContainerNxs::_writeFile() - create the writer";
             m_writer = new nxcpp::DataStreamer(m_pars.prefix, (std::size_t)m_pars.nbframes, (std::size_t)m_pars.framesPerFile);     
-						
-			m_writer->Initialize(m_pars.directory, "");
-
-			
-			//Add sensor 2D (image) // height,width
-			m_writer->AddDataItem2D(m_pars.prefix, aData.dimensions[1],aData.dimensions[0]);
-
-			//Set sensors node's name
-			m_writer->SetDataItemNodeName(m_pars.prefix, m_pars.prefix);
-		  }
-		  
-		  //write data in Nexys file
-		  DEB_TRACE()<<"SaveContainerNxs::_writeFile() - PushData()";
-		  switch(m_pars.imageType)
-		  {
-		    case Bpp8:
-		    //push data into file
-		    m_writer->PushData( m_pars.prefix, (unsigned char*)(aData.data()));
-		    break;
-		    case Bpp32:
-		    //push data into file
-		    m_writer->PushData( m_pars.prefix, (unsigned int*)(aData.data()));
-		    break;
-		    default:  //UINT16 by default
-		    //push data into file
-		    m_writer->PushData( m_pars.prefix, (unsigned short*)(aData.data()));
-		    break;
-	    }
-
-
+                         
+            m_writer->Initialize(m_pars.directory, "");
+             
+#ifdef  NXS_IMMEDIATE             
+            m_writer->SetWriteMode(nxcpp::NexusFileWriter::IMMEDIATE);         
+#elif   NXS_SYNCHRONOUS
+            m_writer->SetWriteMode(nxcpp::NexusFileWriter::SYNCHRONOUS);
+#elif   NXS_DELAYED
+            m_writer->SetWriteMode(nxcpp::NexusFileWriter::DELAYED);
+#endif  
+         
+            //Add sensor 2D (image) // height,width
+            m_writer->AddDataItem2D(m_pars.prefix, aData.dimensions[1],aData.dimensions[0]);
+             
+#ifdef  NXS_COPY            
+            m_writer->SetDataItemMemoryMode(m_pars.prefix,nxcpp::DataStreamer::MemoryMode::COPY);
+#elif   NXS_NOCOPY            
+            m_writer->SetDataItemMemoryMode(m_pars.prefix,nxcpp::DataStreamer::MemoryMode::NO_COPY);
+#endif      
+             
+            //Set sensors node's name
+            m_writer->SetDataItemNodeName(m_pars.prefix, m_pars.prefix);
+          }
+           
+          //write data in Nexus file
+          DEB_TRACE()<<"SaveContainerNxs::_writeFile() - PushData() [type = " << m_pars.imageType << " ]" ;
+          switch(m_pars.imageType)
+          {
+            case Bpp8:
+                //push data into file
+                m_writer->PushData( m_pars.prefix, (unsigned char*)(aData.data()));
+                break;
+            case Bpp16:
+                //push data into file
+                m_writer->PushData( m_pars.prefix, (unsigned short*)(aData.data()));
+                break;
+            case Bpp32:
+                //push data into file
+                m_writer->PushData( m_pars.prefix, (unsigned int*)(aData.data()));
+                break;
+            case Bpp32F:
+                //push data into file
+                m_writer->PushData( m_pars.prefix, (float*)(aData.data()));
+                break;
+            default:  //UINT16 by default
+                //push data into file
+                m_writer->PushData( m_pars.prefix, (unsigned short*)(aData.data()));
+            break;
+          }
+ 
           //- Display Nexus statistics
-		  nxcpp::DataStreamer::Statistics nxsStats;
-
-		  nxsStats = m_writer->GetStatistics();
-
-		  DEB_TRACE()<<"WrittenBytes = "			<<nxsStats.ui64WrittenBytes;
-		  DEB_TRACE()<<"PendingBytes = "			<<nxsStats.ui64PendingBytes;
-		  DEB_TRACE()<<"MaxPendingBytes = "         <<nxsStats.ui64MaxPendingBytes;
-		  DEB_TRACE()<<"TotalBytes = "				<<nxsStats.ui64TotalBytes;
-		  DEB_TRACE()<<"ActiveWriters = "			<<nxsStats.ui16ActiveWriters;
-		  DEB_TRACE()<<"MaxSimultaneousWriters = "	<<nxsStats.ui16MaxSimultaneousWriters;
-		  DEB_TRACE()<<"fInstantMbPerSec = "		<<nxsStats.fInstantMbPerSec;
-		  DEB_TRACE()<<"fPeakMbPerSec = "			<<nxsStats.fPeakMbPerSec;
-		  DEB_TRACE()<<"fAverageMbPerSec = "		<<nxsStats.fAverageMbPerSec;
-
-		  //destroy Nexus object : to do once for each new sequence at the last image
-		  if( (aData.frameNumber+1) == (m_pars.nbframes))
-		  {
-			//Finalize
-			DEB_TRACE()<<"SaveContainerNxs::_writeFile() - Finalize()";
-			m_writer->Finalize();
-
-			//destroy object
-			DEB_TRACE()<<"SaveContainerNxs::_writeFile() - delete the writer";
-			delete m_writer;
-			m_writer = 0;
-		  }
-	  }
-	  catch(yat::Exception& ex)
-	  {
-		  DEB_TRACE()<<"SaveContainerNxs::_writeFile() - catch NexusException";
-		  std::stringstream my_error;
-		  my_error.str("");
-		  for(unsigned i = 0; i < ex.errors.size(); i++)
-		  {
-			  my_error<<ex.errors[i].desc;
-		  }
-		  DEB_TRACE()<<my_error.str();
-		  THROW_CTL_ERROR(Error) << my_error.str();
-	  }
-	  catch(...)
-	  {
-		  DEB_TRACE()<<"SaveContainerNxs::_writeFile() - catch UNKNOWN Exception";
-		  THROW_CTL_ERROR(Error) << "SaveContainerNxs::_writeFile() - catch UNKNOWN Exception";
-	  }
+          nxcpp::DataStreamer::Statistics nxsStats;
+ 
+          nxsStats = m_writer->GetStatistics();
+ 
+          DEB_TRACE()<<"WrittenBytes = "          <<nxsStats.ui64WrittenBytes;
+          DEB_TRACE()<<"PendingBytes = "          <<nxsStats.ui64PendingBytes;
+          DEB_TRACE()<<"MaxPendingBytes = "         <<nxsStats.ui64MaxPendingBytes;
+          DEB_TRACE()<<"TotalBytes = "                <<nxsStats.ui64TotalBytes;
+          DEB_TRACE()<<"ActiveWriters = "         <<nxsStats.ui16ActiveWriters;
+          DEB_TRACE()<<"MaxSimultaneousWriters = "    <<nxsStats.ui16MaxSimultaneousWriters;
+          DEB_TRACE()<<"fInstantMbPerSec = "      <<nxsStats.fInstantMbPerSec;
+          DEB_TRACE()<<"fPeakMbPerSec = "         <<nxsStats.fPeakMbPerSec;
+          DEB_TRACE()<<"fAverageMbPerSec = "      <<nxsStats.fAverageMbPerSec;
+           
+          //destroy Nexus object : to do once for each new sequence at the last image
+          if( (aData.frameNumber+1) == (m_pars.nbframes))
+          {   
+            //Finalize
+            DEB_TRACE()<<"SaveContainerNxs::_writeFile() - Finalize()";
+            m_writer->Finalize();
+ 
+            //destroy object
+            DEB_TRACE()<<"SaveContainerNxs::_writeFile() - delete the writer";
+            delete m_writer;
+            m_writer = 0;
+          }
+      }
+      catch (std::bad_alloc& ex)
+      {   
+          DEB_TRACE() << "Bad alloc exception: " << ex.what();
+          THROW_CTL_ERROR(Error) << "Bad alloc exception: " << ex.what();
+      }
+      catch(yat::Exception& ex)
+      {
+          DEB_TRACE()<<"SaveContainerNxs::_writeFile() - catch NexusException";
+          std::stringstream my_error;
+          my_error.str("");
+          for(unsigned i = 0; i < ex.errors.size(); i++)
+          {
+              my_error<<ex.errors[i].desc;
+          }
+          DEB_TRACE()<<my_error.str();
+          THROW_CTL_ERROR(Error) << my_error.str();
+      }
+      catch(...)
+      {
+          DEB_TRACE()<<"SaveContainerNxs::_writeFile() - catch UNKNOWN Exception";
+          THROW_CTL_ERROR(Error) << "SaveContainerNxs::_writeFile() - catch UNKNOWN Exception";
+      }
 }
 
 //--------------------------------------------------------------------------------------------------------------------
-
-
+>>>>>>> upstream-soleil/master

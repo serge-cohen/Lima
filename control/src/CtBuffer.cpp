@@ -242,6 +242,7 @@ void CtBuffer::setup(CtControl *ct)
 
   int max_nbuffers;
   m_hw_buffer->getMaxNbBuffers(max_nbuffers);
+  max_nbuffers *= m_pars.maxMemory / 100.;
   if (hwNbBuffer > max_nbuffers)
     hwNbBuffer = max_nbuffers;
   m_hw_buffer->setNbBuffers(hwNbBuffer);
@@ -283,13 +284,17 @@ void CtBuffer::transformHwFrameInfoToData(Data &fdata,
     fdata.type= Data::UINT32; break;
   case Bpp32S:
     fdata.type = Data::INT32; break;
+  case Bpp32F:
+    fdata.type = Data::FLOAT; break;
   default:
     THROW_CTL_ERROR(InvalidValue) << "Data type not yet managed" << DEB_VAR1(ftype);
   }
 
   fsize= frame_info.frame_dim.getSize();
   fdata.dimensions.push_back(fsize.getWidth());
-  fdata.dimensions.push_back(fsize.getHeight() * readBlockLen);
+  fdata.dimensions.push_back(fsize.getHeight());
+  if (readBlockLen > 1)
+    fdata.dimensions.push_back(readBlockLen);
   fdata.frameNumber= frame_info.acq_frame_nb;
   fdata.timestamp = frame_info.frame_timestamp;
 
@@ -335,7 +340,7 @@ void CtBuffer::Parameters::reset()
 
   mode= Linear;
   nbBuffers= 1;
-  maxMemory= 75;
+  maxMemory= 70;
 
   DEB_TRACE() << *this;
 }
