@@ -26,7 +26,7 @@ LDFLAGS = -L../../build/ -Wl,--no-as-needed,-rpath=$(shell pwd)/../../build -lli
 
 ## Making sure that we link with nexus libraries if set to do so :
 ifneq ($(COMPILE_NXS_SAVING), 0)
-LDFLAGS += -lnexuscpp -lyat
+LDFLAGS += -lnexuscpp -lyat -lhdf5_cpp
 endif
 
 all: testregex

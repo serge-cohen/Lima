@@ -65,7 +65,7 @@ CORE_LDLIBS += -lcbf
 endif
 
 ifneq ($(COMPILE_NXS_SAVING),0)
-CORE_LDLIBS += -lnexuscpp -lyat -lNeXus -lmxml -lhdf5 -lmfhdf
+CORE_LDLIBS += -lnexuscpp -lyat -lNeXus -lmxml -lhdf5_serial -lmfhdf
 endif
 
 ifneq ($(COMPILE_FITS_SAVING),0)
@@ -85,7 +85,7 @@ ifneq ($(COMPILE_HDF5_SAVING),0)
 PROCESSOR_TYPE := $(shell uname -m)
 CORE_LDFLAGS += -L../third-party/hdf5/src/.libs -Wl,-rpath=$(shell pwd)/../third-party/hdf5/src/.libs
 CORE_LDFLAGS += -L../third-party/hdf5/c++/src/.libs -Wl,-rpath=$(shell pwd)/../third-party/hdf5/c++/src/.libs
-CORE_LDLIBS += -lhdf5_cpp -lhdf5
+CORE_LDLIBS += -lhdf5_cpp -lhdf5_serial
 endif
 
 ifneq ($(COMPILE_CONFIG),0)

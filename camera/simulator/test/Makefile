@@ -40,7 +40,7 @@ LDFLAGS = -L../../../third-party/Processlib/build -lprocesslib -L../../../build 
 
 ## Making sure that we link with nexus libraries if set to do so :
 ifneq ($(COMPILE_NXS_SAVING), 0)
-LDFLAGS += -lnexuscpp -lyat
+LDFLAGS += -lnexuscpp -lyat -lhdf5_cpp
 endif
 
 all: test testsimulator testsimuhwinterface

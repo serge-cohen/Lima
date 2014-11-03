@@ -62,7 +62,7 @@ endif
 
 ## Making sure that we link with nexus libraries if set to do so :
 ifneq ($(COMPILE_NXS_SAVING), 0)
-LDLIBS += -lnexuscpp -lyat
+LDLIBS += -lnexuscpp -lyat -lhdf5_cpp
 endif
 
 ifndef COMPILE_SIMULATOR
