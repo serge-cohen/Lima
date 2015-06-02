@@ -22,27 +22,27 @@
 #include <string>
 #include <sstream>
 
-#include "CtControl.h"
-#include "CtSaving.h"
+#include "lima/CtControl.h"
+#include "lima/CtSaving.h"
 #ifdef WITH_SPS_IMAGE
-#include "CtSpsImage.h"
+#include "lima/CtSpsImage.h"
 #endif
-#include "CtAcquisition.h"
-#include "CtImage.h"
-#include "CtBuffer.h"
-#include "CtShutter.h"
-#include "CtAccumulation.h"
-#include "CtVideo.h"
-#include "CtEvent.h"
+#include "lima/CtAcquisition.h"
+#include "lima/CtImage.h"
+#include "lima/CtBuffer.h"
+#include "lima/CtShutter.h"
+#include "lima/CtAccumulation.h"
+#include "lima/CtVideo.h"
+#include "lima/CtEvent.h"
 #ifdef WITH_CONFIG
-#include "CtConfig.h"
+#include "lima/CtConfig.h"
 #endif
-#include "SoftOpInternalMgr.h"
-#include "SoftOpExternalMgr.h"
+#include "lima/SoftOpInternalMgr.h"
+#include "lima/SoftOpExternalMgr.h"
 
-#include "HwReconstructionCtrlObj.h"
+#include "lima/HwReconstructionCtrlObj.h"
 
-#include "PoolThreadMgr.h"
+#include "processlib/PoolThreadMgr.h"
 
 using namespace lima;
 
@@ -184,12 +184,7 @@ CtControl::ImageStatusThread::ImageStatusThread(Cond& cond,
   : m_cond(cond), m_cb(cb)
 {
   DEB_CONSTRUCTOR();
-  AutoMutex lock(m_cond.mutex());
-
   start();
-
-  // wait thread is ready
-  m_cond.wait();
 }
 
 CtControl::ImageStatusThread::~ImageStatusThread()
@@ -256,9 +251,6 @@ void CtControl::ImageStatusThread::threadFunction()
 
   AutoMutex lock(m_cond.mutex());
 
-  // notify we're ready
-  m_cond.signal();
-
   while (true) {
     while (m_event_list.empty())
       m_cond.wait();
@@ -299,7 +291,6 @@ CtControl::CtControl(HwInterface *hw) :
   m_images_buffer_size(16),
   m_policy(All), m_ready(false),
   m_autosave(false), m_running(false),
-  m_img_status_thread(NULL),
   m_reconstruction_cbk(NULL)
 {
   DEB_CONSTRUCTOR();
@@ -368,9 +359,13 @@ CtControl::~CtControl()
   PoolThreadMgr& pool_thread_mgr = PoolThreadMgr::get();
   pool_thread_mgr.wait();
 
-  if (m_img_status_thread)
-    unregisterImageStatusCallback(*m_img_status_thread->cb());
-  
+  for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
+      i != m_img_status_thread_list.end();++i)
+    {
+      (*i)->cb()->setImageStatusCallbackGen(NULL);
+      delete *i;
+    }
+
   if(m_reconstruction_cbk)
     {
       HwReconstructionCtrlObj* reconstruction_obj;
@@ -392,6 +387,7 @@ CtControl::~CtControl()
   delete m_ct_shutter;
   delete m_ct_accumulation;
   delete m_ct_video;
+  delete m_ct_event;
 
   delete m_op_int;
   delete m_op_ext;
@@ -552,6 +548,7 @@ void CtControl::startAcq()
 
   AutoMutex aLock(m_cond.mutex());
 
+  m_ct_video->_startAcqTime();
   m_hw->startAcq();
   m_status.AcquisitionStatus = AcqRunning;
   DEB_TRACE() << "Hardware Acquisition started";
@@ -662,9 +659,12 @@ void CtControl::_calcAcqStatus()
 	  DEB_TRACE() << DEB_VAR1(m_status);
 	}
 
-      if (m_img_status_thread && (m_status.AcquisitionStatus != AcqRunning)) {
+      if (!m_img_status_thread_list.empty() && 
+	  (m_status.AcquisitionStatus != AcqRunning)) {
 	aLock.unlock();
-	m_img_status_thread->imageStatusChanged(m_status.ImageCounters, 1);
+	for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
+	    i != m_img_status_thread_list.end();++i)
+	  (*i)->imageStatusChanged(m_status.ImageCounters, 1);
 	return;
       }
     }
@@ -889,8 +889,9 @@ void CtControl::resetStatus(bool only_acq_status)
     m_status.AcquisitionStatus = AcqReady;
   } else {
     m_status.reset();
-    if (m_img_status_thread)
-      m_img_status_thread->imageStatusChanged(m_status.ImageCounters, 1);
+    for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
+	i != m_img_status_thread_list.end();++i)
+      (*i)->imageStatusChanged(m_status.ImageCounters, 1);
   }
 }
 
@@ -928,8 +929,9 @@ bool CtControl::newFrameReady(Data& fdata)
       if (!internal_stage)
 	newBaseImageReady(fdata);
 
-      if (m_img_status_thread)
-	m_img_status_thread->imageStatusChanged(m_status.ImageCounters);
+    for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
+	i != m_img_status_thread_list.end();++i)
+      (*i)->imageStatusChanged(m_status.ImageCounters);
       _calcAcqStatus();
     }
 
@@ -977,8 +979,9 @@ void CtControl::newBaseImageReady(Data &aData)
 
   m_ct_video->frameReady(aData);
 
-  if(m_img_status_thread)
-    m_img_status_thread->imageStatusChanged(m_status.ImageCounters);
+  for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
+      i != m_img_status_thread_list.end();++i)
+      (*i)->imageStatusChanged(m_status.ImageCounters);
 
   _calcAcqStatus();
 }
@@ -1019,8 +1022,9 @@ void CtControl::newImageReady(Data &aData)
   if(m_autosave)
     newFrameToSave(aData);
 
-  if (m_img_status_thread)
-    m_img_status_thread->imageStatusChanged(m_status.ImageCounters);
+  for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
+      i != m_img_status_thread_list.end();++i)
+    (*i)->imageStatusChanged(m_status.ImageCounters);
   _calcAcqStatus();
 }
 
@@ -1052,8 +1056,9 @@ void CtControl::newImageSaved(Data&)
     }
   aLock.unlock();
 
-  if (m_img_status_thread)
-    m_img_status_thread->imageStatusChanged(m_status.ImageCounters);
+  for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
+      i != m_img_status_thread_list.end();++i)
+    (*i)->imageStatusChanged(m_status.ImageCounters);
   _calcAcqStatus();
 }
 
@@ -1067,29 +1072,52 @@ void CtControl::newFrameToSave(Data& fdata)
   m_ct_saving->frameReady(fdata);
 }
 
+/** registerImageStatusCallback is not thread safe!!!
+ */
 void CtControl::registerImageStatusCallback(ImageStatusCallback& cb)
 {
   DEB_MEMBER_FUNCT();
-  DEB_PARAM() << DEB_VAR2(&cb, m_img_status_thread);
+  DEB_PARAM() << DEB_VAR1(&cb);
 
-  if (m_img_status_thread)
-    THROW_CTL_ERROR(InvalidValue) << "ImageStatusCallback already registered";
+  Status aStatus;
+  getStatus(aStatus);
+  if(aStatus.AcquisitionStatus == AcqRunning)
+    THROW_CTL_ERROR(Error) << "Can't register callback if acquisition is running";
 
+  ImageStatusThread *thread = new ImageStatusThread(m_cond, &cb);
+  AutoMutex aLock(m_cond.mutex());
   cb.setImageStatusCallbackGen(this);
-  m_img_status_thread = new ImageStatusThread(m_cond, &cb);
+  m_img_status_thread_list.push_back(thread);
 }
-
+/** unregisterImageStatusCallback is not thread safe!!!
+ */
 void CtControl::unregisterImageStatusCallback(ImageStatusCallback& cb)
 {
   DEB_MEMBER_FUNCT();
-  DEB_PARAM() << DEB_VAR2(&cb, m_img_status_thread);
+  DEB_PARAM() << DEB_VAR1(&cb);
 
-  if (!m_img_status_thread || (m_img_status_thread->cb() != &cb))
-    THROW_CTL_ERROR(InvalidValue) << "ImageStatusCallback not registered";
+  Status aStatus;
+  getStatus(aStatus);
+  if(aStatus.AcquisitionStatus != AcqReady)
+    THROW_CTL_ERROR(Error) << "Can't unregister callback if acquisition is not idle";
+
+  AutoMutex aLock(m_cond.mutex());
+  bool found = false;
+  for(ImageStatusThreadList::iterator i = m_img_status_thread_list.begin();
+      i != m_img_status_thread_list.end();++i)
+    {
+      if((*i)->cb() == &cb)
+	{
+	  found = true;
+	  delete *i;
+	  m_img_status_thread_list.erase(i);
+	  cb.setImageStatusCallbackGen(NULL);
+	  break;
+	}
+    }
   
-  delete m_img_status_thread;
-  m_img_status_thread = NULL;
-  cb.setImageStatusCallbackGen(NULL);
+  if (!found)
+    THROW_CTL_ERROR(InvalidValue) << "ImageStatusCallback not registered";
 }
 
 /** @brief this methode check if an overrun 
@@ -1151,6 +1179,16 @@ CtControl::ImageStatus::ImageStatus()
   reset();
 }
 
+CtControl::ImageStatus::ImageStatus(long lastImgAcq, long lastBaseImgReady,
+				    long lastImgReady, long lastImgSaved,
+				    long lastCntReady):
+    LastImageAcquired(lastImgAcq), LastBaseImageReady(lastBaseImgReady),
+    LastImageReady(lastImgReady), LastImageSaved(lastImgSaved),
+    LastCounterReady(lastCntReady)
+{
+    DEB_CONSTRUCTOR();
+}
+
 void CtControl::ImageStatus::reset()
 {
   DEB_MEMBER_FUNCT();
@@ -1172,6 +1210,17 @@ CtControl::Status::Status() :
   Error(NoError),
   CameraStatus(NoCameraError),
   ImageCounters()
+{
+  DEB_CONSTRUCTOR();
+}
+
+CtControl::Status::Status(AcqStatus acq_status, ErrorCode err,
+			  CameraErrorCode cam_err,
+			  const ImageStatus& img_status) :
+  AcquisitionStatus(acq_status),
+  Error(err),
+  CameraStatus(cam_err),
+  ImageCounters(img_status)
 {
   DEB_CONSTRUCTOR();
 }

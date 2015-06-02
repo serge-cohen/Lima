@@ -118,15 +118,18 @@
 [submodule "camera/aviex"]
 	path = camera/aviex
 	url = git://github.com/soleil-ica/Lima-camera-aviex.git
-[submodule "camera/hamamatsu"]
-	path = camera/hamamatsu
-	url = git://github.com/soleil-ica/Lima-camera-hamamatsu.git
 [submodule "camera/uview"]
 	path = camera/uview
 	url = git://github.com/soleil-ica/Lima-camera-uview.git
 [submodule "third-party/hdf5"]
 	path = third-party/hdf5
 	url = git://github.com/esrf-bliss/hdf5.git
-[submodule "camera/eiger"]
-	path = camera/eiger
-	url = git://github.com/soleil-ica/Lima-camera-eiger.git
+[submodule "camera/merlin"]
+	path = camera/merlin
+	url = git://github.com/esrf-bliss/Lima-camera-merlin
+[submodule "camera/mythen3"]
+	path = camera/mythen3
+	url = git://github.com/esrf-bliss/Lima-camera-mythen3
+[submodule "camera/hamamatsu"]
+	path = camera/hamamatsu
+	url = git://github.com/esrf-bliss/Lima-camera-hamamatsu.git

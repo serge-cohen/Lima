@@ -195,8 +195,8 @@ endif
 
 ifneq ($(COMPILE_MAXIPIX),0)
 
-MAXIPIX_LDFLAGS	:= $(ESPIA_LDFLAGS) -L.
-MAXIPIX_LDLIBS	:= $(ESPIA_LDLIBS) -llimaespia
+MAXIPIX_LDFLAGS	:= $(ESPIA_LDFLAGS) -L. -g
+MAXIPIX_LDLIBS	:= $(ESPIA_LDLIBS) -llimaespia 
 
 maxipix-name	:= maxipix
 maxipix-objs	:= ../camera/maxipix/src/Maxipix.o
@@ -344,6 +344,28 @@ build_targets	+= $(call lib-full,$(adsc-name),$(adsc-ver))
 
 endif
 
+############################
+# LIMA - MERLIN
+############################
+ifneq ($(COMPILE_MERLIN),0)
+
+MERLIN_LDFLAGS	:= $(LDFLAGS)
+MERLIN_LDLIBS	:= $(LDLIBS)
+
+merlin-name	:= merlin
+merlin-objs	:= ../camera/merlin/src/Merlin.o
+merlin-ver	:= ../camera/merlin/VERSION
+merlin-flags	:= $(MERLIN_LDFLAGS)
+merlin-deps	:= $(MERLIN_LDLIBS)
+
+$(call lib-full,$(merlin-name),$(merlin-ver)): $(merlin-objs)
+	$(call compile-lib,$(merlin-name),$(merlin-ver),\
+			   $(merlin-flags),$(merlin-deps),$@,$+)
+	$(call create-links,$(merlin-name),$(merlin-ver))
+
+build_targets	+= $(call lib-full,$(merlin-name),$(merlin-ver))
+
+endif
 
 ############################
 # LIMA - MYTHEN
@@ -368,6 +390,28 @@ build_targets	+= $(call lib-full,$(mythen-name),$(mythen-ver))
 
 endif
 
+############################
+# LIMA - MYTHEN3
+############################
+
+ifneq ($(COMPILE_MYTHEN3),0)
+
+MYTHEN3_LDLIBS	:= $(LDLIBS)
+
+mythen3-name	:= mythen3
+mythen3-objs	:= ../camera/mythen3/src/Mythen3.o
+mythen3-ver	:= ../camera/mythen3/VERSION
+mythen3-flags	:= $(LDFLAGS)
+mythen3-deps	:= $(MYTHEN3_LDLIBS)
+
+$(call lib-full,$(mythen3-name),$(mythen3-ver)): $(mythen3-objs)
+	$(call compile-lib,$(mythen3-name),$(mythen3-ver),\
+			   $(mythen3-flags),$(mythen3-deps),$@,$+)
+	$(call create-links,$(mythen3-name),$(mythen3-ver))
+
+build_targets	+= $(call lib-full,$(mythen3-name),$(mythen3-ver))
+
+endif
 
 ############################
 # LIMA - ANDOR
@@ -710,6 +754,29 @@ $(call lib-full,$(aviex-name),$(aviex-ver)): $(aviex-objs)
 	$(call create-links,$(aviex-name),$(aviex-ver))
 
 build_targets	+= $(call lib-full,$(aviex-name),$(aviex-ver))
+
+endif
+
+############################
+# LIMA - META
+############################
+ifneq ($(COMPILE_META),0)
+
+META_LDFLAGS	:= $(LDFLAGS)
+META_LDLIBS	:= $(LDLIBS)
+
+meta-name	:= meta
+meta-objs	:= ../camera/common/meta/src/Meta.o
+meta-ver	:= ../camera/common/meta/VERSION
+meta-flags	:= $(META_LDFLAGS)
+meta-deps	:= $(META_LDLIBS)
+
+$(call lib-full,$(meta-name),$(meta-ver)): $(meta-objs)
+	$(call compile-lib,$(meta-name),$(meta-ver),\
+			   $(meta-flags),$(meta-deps),$@,$+)
+	$(call create-links,$(meta-name),$(meta-ver))
+
+build_targets	+= $(call lib-full,$(meta-name),$(meta-ver))
 
 endif
 

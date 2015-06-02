@@ -26,7 +26,7 @@
 %Feature WITH_CONFIG
 
 %ModuleHeaderCode
-  #include <SoftOpId.h>
+#include "lima/SoftOpId.h"
 %End
 
 %MappedType std::string
@@ -178,6 +178,40 @@ for(int i = 0;i < PyList_Size(sipPy);++i)
 %ConvertFromTypeCode
 PyObject* aReturnListPt = PyList_New(sipCpp->size());
 std::vector<double>::iterator vIter = sipCpp->begin();
+
+for(int i = 0;vIter != sipCpp->end();++vIter,++i)
+  PyList_SET_ITEM(aReturnListPt,i,PyFloat_FromDouble(*vIter));
+
+return aReturnListPt;
+%End
+
+};
+
+%MappedType std::vector<float>
+{
+%TypeHeaderCode
+#include <vector>
+%End
+
+%ConvertToTypeCode
+if (sipIsErr == NULL)
+{
+bool aReturnFlag = PyList_Check(sipPy);
+for(int i = 0;aReturnFlag && i < PyList_Size(sipPy);++i)
+        aReturnFlag = PyFloat_Check(PyList_GET_ITEM(sipPy,i));
+return aReturnFlag;
+}
+
+*sipCppPtr = new std::vector<float>(PyList_Size(sipPy));
+for(int i = 0;i < PyList_Size(sipPy);++i)
+  (*sipCppPtr)->operator[](i) = PyFloat_AS_DOUBLE(PyList_GET_ITEM(sipPy,i));
+
+    return sipGetState(sipTransferObj);
+%End
+
+%ConvertFromTypeCode
+PyObject* aReturnListPt = PyList_New(sipCpp->size());
+std::vector<float>::iterator vIter = sipCpp->begin();
 
 for(int i = 0;vIter != sipCpp->end();++vIter,++i)
   PyList_SET_ITEM(aReturnListPt,i,PyFloat_FromDouble(*vIter));

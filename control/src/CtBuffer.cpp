@@ -19,8 +19,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#include "CtBuffer.h"
-#include "CtAccumulation.h"
+#include "lima/CtBuffer.h"
+#include "lima/CtAccumulation.h"
 
 using namespace lima;
 
@@ -286,6 +286,14 @@ void CtBuffer::transformHwFrameInfoToData(Data &fdata,
     fdata.type = Data::INT32; break;
   case Bpp32F:
     fdata.type = Data::FLOAT; break;
+  case Bpp1:
+  case Bpp4:
+  case Bpp6:
+    fdata.type= Data::UINT8; break;
+  case Bpp24:
+    fdata.type= Data::UINT32; break;
+  case Bpp24S:
+    fdata.type = Data::INT32; break;
   default:
     THROW_CTL_ERROR(InvalidValue) << "Data type not yet managed" << DEB_VAR1(ftype);
   }

@@ -22,7 +22,7 @@
 class HwSavingCtrlObj
 {
 %TypeHeaderCode
-#include <HwSavingCtrlObj.h>
+#include "lima/HwSavingCtrlObj.h"
 using namespace lima;
 %End
 public:
@@ -48,6 +48,8 @@ public:
   void setSuffix(const std::string&);
   void setNextNumber(long number);
   void setIndexFormat(const std::string&);
+  
+void setOverwritePolicy(const std::string&);
   
   void setSaveFormat(const std::string &format);
   virtual void getPossibleSaveFormat(std::list<std::string> &format_list) const = 0;

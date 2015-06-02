@@ -19,8 +19,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#include "HwSavingCtrlObj.h"
-#include "Exceptions.h"
+#include "lima/HwSavingCtrlObj.h"
+#include "lima/Exceptions.h"
 #include <deque>
 #include <algorithm>
 
@@ -125,6 +125,10 @@ void HwSavingCtrlObj::setSuffix(const std::string& suffix)
 {
   m_suffix = suffix;
 }
+void HwSavingCtrlObj::setOptions(const std::string& options)
+{
+  m_options = options;
+}
 void HwSavingCtrlObj::setNextNumber(long number)
 {
   m_next_number = number;
@@ -136,6 +140,10 @@ void HwSavingCtrlObj::setIndexFormat(const std::string& indexFormat)
 void HwSavingCtrlObj::setSaveFormat(const std::string &format)
 {
   m_file_format = format;
+}
+void HwSavingCtrlObj::setOverwritePolicy(const std::string &overwritePolicy)
+{
+  m_overwritePolicy = overwritePolicy;
 }
 
 

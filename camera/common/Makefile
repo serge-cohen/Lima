@@ -37,6 +37,13 @@ endif
 
 ifneq ($(COMPILE_SISOME4),0)
 sub-dirs += siso-me4
+
+ifndef COMPILE_META
+COMPILE_META = 0
+endif
+
+ifneq ($(COMPILE_META),0)
+sub-dirs += meta
 endif
 
 include ../../global.inc
