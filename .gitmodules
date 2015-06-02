@@ -6,7 +6,7 @@
 	url = git://git.epn-campus.eu/repositories/Sps.git
 [submodule "third-party/Processlib"]
 	path = third-party/Processlib
-	url = git://github.com/soleil-ica/Processlib.git
+	url = git://github.com/esrf-bliss/Processlib.git
 [submodule "camera/basler"]
 	path = camera/basler
 	url = git://github.com/soleil-ica/Lima-camera-basler
