@@ -175,12 +175,12 @@ void SaveContainerNxs::_writeFile(Data &aData,
 			if(m_options.at(1) == "NO_COPY" )
 			{
 				DEB_TRACE() << "SaveContainerNxs::_writeFile() - Memory Mode = NO_COPY";
-				m_writer->SetDataItemMemoryMode(m_pars.prefix, nxcpp::DataStreamer::MemoryMode::NO_COPY);
+				m_writer->SetDataItemMemoryMode(m_pars.prefix, nxcpp::DataStreamer::NO_COPY);
 			}
 			else
 			{
 				DEB_TRACE() << "SaveContainerNxs::_writeFile() - Memory Mode = COPY";
-				m_writer->SetDataItemMemoryMode(m_pars.prefix, nxcpp::DataStreamer::MemoryMode::COPY);
+				m_writer->SetDataItemMemoryMode(m_pars.prefix, nxcpp::DataStreamer::COPY);
 			}
 
 			//Set sensors node's name

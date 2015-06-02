@@ -37,6 +37,7 @@ endif
 
 ifneq ($(COMPILE_SISOME4),0)
 sub-dirs += siso-me4
+endif
 
 ifndef COMPILE_META
 COMPILE_META = 0
